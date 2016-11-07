@@ -58,29 +58,36 @@ fi
 # Use parted to get the list of SD card partitions. 
 # The last logical partition #7's End value is what we want. This is the total size that we want to 'dd'
 # We need this value and the 'bs for input and output' and from these two value we can determine 'dd's count value
+# Notice the 'calculations' are performed in units of sectors.
 
-parts=`sudo parted -s ${args[0]} unit mib print | awk -F ' ' '/^ [1-9]/ {print $1 " " $3}' | sort --reverse`
+parts=`sudo parted -s ${args[0]} unit s print | awk -F ' ' '/^ [1-9]/ {print $1 " " $3}' | sort --reverse`
 
-size=`echo $parts | awk -F ' ' '{ if ( $1 == 7 ) { print $2}} ' | sed 's/MiB//g' `
+size=`echo $parts | awk -F ' ' '{ if ( $1 == 7 ) { print $2}} ' | sed 's/s//g' `
 
-# echo $size"MiB"
+size=$((size + 1))
+
+echo $size" sectors"
 
 # Prepare the 'dd' arguments
 
 bs=100
 
-count=`expr $size \* 1024 / $bs`
-
+# count=`expr $size \* 1024 / $bs`
 # echo "count = "$count
+echo " "
+echo "Issuing command dd if=${args[0]} of=${args[1]} bs=b count=$size conv=notrunc,noerror,fsync"
+echo " "
 
-echo "Issuing command dd if=${args[0]} of=${args[1]} bs=$bs"K" count=$count"
-echo "Monitor progress using command 'sudo kill -USR1 `pidof dd` ' from another command window"
+# echo "Issuing command dd if=${args[0]} of=${args[1]} bs=$bs"K" count=$count conv=notrunc,noerror,fsync"
+echo "Monitor progress using command 'sudo kill -USR1 \`pidof dd\` ' from another command window"
 
 if [ -f ${args[1]} ]; then
   rm ${args[1]}
 fi
 
-dd if=${args[0]} of=${args[1]} bs=$bs"K" count=$count 
+dd if=${args[0]} of=${args[1]} bs=b count=$size conv=notrunc,noerror,fsync 
+
+####### dd if=${args[0]} of=${args[1]} count=$size conv=notrunc,noerror,fsync 
 
 if [ $? != 0 ]; then
   echo "Error from 'dd' command. The copy had a problem."
