@@ -13,9 +13,9 @@ if [ $# -eq 0 ]; then echo -e "\n\nUsage: Specify the SD card device to be forma
 args=("$@")
 
 # SD cards of nominal size 8GB are not identical in capacity; they have a range of actual byte sizes.
-
-# sd card range (lower=74MiB)
-LOWER=7759462400
+# Production SD card is smaller than current LOWER value.
+# sd card range (lower=7,562,880KiB)
+LOWER=7744389120
 UPPER=8000000000
 
 # Have to pass external variables into 'awk' with -v
@@ -46,18 +46,18 @@ done
 # Partition set up. Sizes are in MiB (1024*1024)
 # This choice help when we want to 'dd' the disk because then we can setup 'dd' to copy only the extent of
 # all the partitions and _not_ the entire SD card.
-UNIT=MiB
+UNIT=KiB
 
 # echo $UNIT
 
-bootp=("primary", "fat32", "40", "100")
-rootp=("primary", "ext4", "100", "2100")
-shadowp=("primary", "ext4", "2100", "4100")
-extendp=("extended", "4100", "7400")
+bootp=("primary", "fat32", "40960", "102400")
+rootp=("primary", "ext4", "102400", "2150400")
+shadowp=("primary", "ext4", "2150400", "4198400")
+extendp=("extended", "4198400", "7562880")
 ## Seems there has to be some space set aside in the extended partition for a partition table(?) before the first allocated logical partition
-datap1=("logical", "ext4", "4102", "5502")
-datap2=("logical", "ext4", "5502", "6902")
-datap3=("logical", "ext4", "6902", "7400")
+datap1=("logical", "ext4", "4198401", "5646337")
+datap2=("logical", "ext4", "5646338", "7094273")
+datap3=("logical", "ext4", "7094274", "7562880")
 
 # echo "First Method:  ${bootp[*]}"
 # echo "Second Method: ${bootp[@]}"
@@ -97,7 +97,7 @@ mkfs.ext4 ${args[0]}7 -L data2
 echo -e "Done\n\n\n"
 
 # Print what has been created.
-sudo parted -s ${args[0]} unit mib print free
+sudo parted -s ${args[0]} unit kib print free
 
 exit 0
 

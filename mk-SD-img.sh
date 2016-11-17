@@ -25,10 +25,8 @@ fi
 # nominal 8GB that have fewer than 7100MiB capacity. 
 
 args=("$@")
-
 # SD cards of nominal size 8GB are not identical in capacity; they have a range of actual byte sizes.
-
-# sd card range (lower=7400MiB)
+# sd card range (lower=7,562880KiB)
 LOWER=7759462400
 UPPER=8000000000
 
@@ -70,7 +68,7 @@ echo $size" sectors"
 
 # Prepare the 'dd' arguments
 
-bs=100
+bs=64
 
 # count=`expr $size \* 1024 / $bs`
 # echo "count = "$count
