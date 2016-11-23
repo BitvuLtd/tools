@@ -31,6 +31,30 @@ blockdev --getsize64 ${args[0]} | awk -F ' ' -v lower="$LOWER" -v upper="$UPPER"
 '
 if [ $? -eq 1 ]; then exit 1; fi
 
+
+# Ask user if they would like the whole device 'zerord' before starting the formatting. This has the later potential to
+# increase the compression ratio of the image of the SD card when using zip.
+echo ""
+echo ""
+echo "Would you like to write zeros to the SD card before starting formatting?"
+echo "This has the potential to make the SD card image smaller after it has been zipped."
+echo "This does take quite a long time. To monitor progress issue the commad \"  sudo kill -USR1 \`pidof dd\` \" "
+echo "from a second terminal"
+echo ""
+
+select yn in "Yes" "No"; do
+ 	case $yn in
+		Yes )  
+					echo "Issuing command dd if=/dev/zero of=${args[0]} bs=1M "
+					sudo dd if=/dev/zero of=${args[0]} bs=1M
+					# When the SD card has been flattened then we have to add a label to the SD card afterwards
+					sudo parted ${args[0]} mklabel msdos
+					break;;
+
+		No  ) break;;
+    esac
+done
+
 # Delete all current partitions
 parts=`sudo parted -s ${args[0]} print | awk -F ' ' '/^ [1-9]/ {print $1}' | sort --reverse`
 
